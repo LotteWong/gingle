@@ -25,8 +25,8 @@ func (engine *Engine) Run(addr string) error {
 
 // TODO: ServeHTTP 服务
 func (engine *Engine) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	ctx := newContext(rw, req)     // TODO: 关键转换
-	engine.router.handleRoute(ctx) // TODO: 关键转换
+	ctx := newContext(rw, req) // TODO: 关键转换
+	engine.router.handle(ctx)  // TODO: 关键转换
 }
 
 func (engine *Engine) GET(pattern string, handler HandlerFunc) {

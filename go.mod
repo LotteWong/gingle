@@ -2,7 +2,10 @@ module gingle-web
 
 go 1.13
 
-require gingle v0.0.0
+require (
+	gingle v0.0.0
+	honnef.co/go/tools v0.0.1-2020.1.3 // indirect
+)
 
 replace gingle => ./gingle
 
