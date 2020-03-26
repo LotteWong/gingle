@@ -90,9 +90,11 @@ func (r *router) handle(ctx *Context) {
 
 	if n != nil {
 		ctx.Params = params
-		key := ctx.Method + "-" + n.pattern // TODO: 注意是n.pattern不是ctx.Pattern
-		r.handlers[key](ctx)
+		key := ctx.Method + "-" + n.pattern                        // TODO: 注意是n.pattern不是ctx.Pattern
+		ctx.middlewares = append(ctx.middlewares, r.handlers[key]) // TODO: 最后添加处理函数
 	} else {
 		ctx.String(http.StatusNotFound, "404 NOT FOUND: %s\n", ctx.Pattern)
 	}
+
+	ctx.Next()
 }

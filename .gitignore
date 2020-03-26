@@ -1,2 +1,4 @@
 go.sum
 /gingle/go.sum
+/gingle/middlewares/go.sum
+main.exe

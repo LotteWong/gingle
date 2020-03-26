@@ -2,6 +2,7 @@ package main
 
 import (
 	"gingle"
+	"gingle/middlewares"
 	"net/http"
 )
 
@@ -22,6 +23,7 @@ func main() {
 			ctx.String(http.StatusOK, "Message = %s\nPattern = %s\nMethod = %s\n", ctx.Param("msg"), ctx.Pattern, ctx.Method)
 		})
 	}
+	testString.Use(middlewares.Logger())
 
 	testJSON := router.Group("/testJSON")
 	{

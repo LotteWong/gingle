@@ -18,6 +18,9 @@ type Context struct {
 	Params  map[string]string
 
 	StatusCode int
+
+	middlewares []HandlerFunc
+	index       int
 }
 
 func newContext(rw http.ResponseWriter, req *http.Request) *Context {
@@ -26,6 +29,7 @@ func newContext(rw http.ResponseWriter, req *http.Request) *Context {
 		Req:        req,
 		Pattern:    req.URL.Path,
 		Method:     req.Method,
+		index:      -1,
 	}
 }
 
@@ -72,4 +76,20 @@ func (ctx *Context) HTML(code int, html string) {
 	ctx.SetStatus(code)
 	ctx.SetHeader("Content-Type", "text/html")
 	ctx.RespWriter.Write([]byte(html)) // TODO: 请求体
+}
+
+func (ctx *Context) Fail(code int, err string) {
+	ctx.index = len(ctx.middlewares) // TODO: 置为末位表示出错
+	ctx.JSON(code, H{
+		"msg": err,
+	})
+}
+
+func (ctx *Context) Next() {
+	// TODO: 正序处理
+	ctx.index++
+
+	for ; ctx.index < len(ctx.middlewares); ctx.index++ {
+		ctx.middlewares[ctx.index](ctx)
+	}
 }
