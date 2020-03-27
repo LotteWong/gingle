@@ -1,5 +1,10 @@
 package gingle
 
+import (
+	"net/http"
+	"path"
+)
+
 // TODO: HandlerFunc 业务处理函数
 type HandlerFunc func(*Context)
 
@@ -47,4 +52,27 @@ func (group *RouterGroup) DELETE(pattern string, handler HandlerFunc) {
 
 func (group *RouterGroup) Use(middlewares ...HandlerFunc) {
 	group.middlewares = append(group.middlewares, middlewares...)
+}
+
+func (group *RouterGroup) createStaticHandler(relativePath string, fs http.FileSystem) HandlerFunc {
+	absolutePath := path.Join(group.prefix, relativePath)
+	fileServer := http.StripPrefix(absolutePath, http.FileServer(fs)) // TODO: 关键转换
+
+	return func(ctx *Context) {
+		// TODO: 检查是否存在
+		file := ctx.Param("filepath")
+		if _, err := fs.Open(file); err != nil {
+			ctx.Fail(http.StatusNotFound, "404 Not Found")
+			return
+		}
+
+		// TODO: 进行渲染返回
+		fileServer.ServeHTTP(ctx.RespWriter, ctx.Req)
+	}
+}
+
+func (group *RouterGroup) Static(relativePath string, root string) {
+	handler := group.createStaticHandler(relativePath, http.Dir(root))
+	pattern := path.Join(relativePath, "/*filepath")
+	group.GET(pattern, handler)
 }

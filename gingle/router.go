@@ -63,7 +63,7 @@ func (r *router) getRoute(method string, pattern string) (*node, map[string]stri
 			if part[0] == ':' {
 				params[part[1:]] = searchParts[index]
 			}
-			if part[0] == '*' && len(part) >= 2 {
+			if part[0] == '*' && len(part) > 1 {
 				params[part[1:]] = strings.Join(searchParts[index:], "/")
 				break
 			}

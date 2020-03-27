@@ -9,6 +9,8 @@ import (
 func main() {
 	router := gingle.New()
 
+	router.Static("/assets", "./static")
+
 	router.GET("/testHTML", func(ctx *gingle.Context) {
 		ctx.HTML(http.StatusOK, "<h1>Hello Gingle!</h1>")
 	})
@@ -16,11 +18,11 @@ func main() {
 	testString := router.Group("/testString")
 	{
 		testString.GET("/", func(ctx *gingle.Context) {
-			ctx.String(http.StatusOK, "Message = %s\nPattern = %s\nMethod = %s\n", ctx.Query("msg"), ctx.Pattern, ctx.Method)
+			ctx.String(http.StatusOK, "Mode = Static\nMessage = %s\nPattern = %s\nMethod = %s\n", ctx.Query("msg"), ctx.Pattern, ctx.Method)
 		})
 
 		testString.GET("/:msg", func(ctx *gingle.Context) {
-			ctx.String(http.StatusOK, "Message = %s\nPattern = %s\nMethod = %s\n", ctx.Param("msg"), ctx.Pattern, ctx.Method)
+			ctx.String(http.StatusOK, "Mode = Dynamic\nMessage = %s\nPattern = %s\nMethod = %s\n", ctx.Param("msg"), ctx.Pattern, ctx.Method)
 		})
 	}
 	testString.Use(middlewares.Logger())
