@@ -2,12 +2,11 @@ package main
 
 import (
 	"gingle"
-	"gingle/middlewares"
 	"net/http"
 )
 
 func main() {
-	router := gingle.New()
+	router := gingle.Default()
 
 	router.Static("/assets", "./static")
 
@@ -25,7 +24,6 @@ func main() {
 			ctx.String(http.StatusOK, "Mode = Dynamic\nMessage = %s\nPattern = %s\nMethod = %s\n", ctx.Param("msg"), ctx.Pattern, ctx.Method)
 		})
 	}
-	testString.Use(middlewares.Logger())
 
 	testJSON := router.Group("/testJSON")
 	{
@@ -42,6 +40,11 @@ func main() {
 			})
 		})
 	}
+
+	router.GET("/panic", func(ctx *gingle.Context) {
+		names := []string{"bot", "exp"}
+		ctx.String(http.StatusOK, "%s", names[2])
+	})
 
 	router.Run(":8080")
 }

@@ -27,6 +27,13 @@ func New() *Engine {
 	return engine
 }
 
+func Default() *Engine {
+	// TODO: 默认会加载中间件
+	engine := New()
+	engine.Use(Logger(), Recovery())
+	return engine
+}
+
 // TODO: ListenAndServe 监听
 func (engine *Engine) Run(addr string) error {
 	return http.ListenAndServe(addr, engine)
