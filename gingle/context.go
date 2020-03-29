@@ -6,23 +6,32 @@ import (
 	"net/http"
 )
 
-// TODO: 响应的结构体
+// H helps convert obj to json
 type H map[string]interface{}
 
+// Context maintains information about each connect
 type Context struct {
+	// For managing responses and requests
 	RespWriter http.ResponseWriter
 	Req        *http.Request
 
+	// For parsing the request
 	Pattern string
 	Method  string
 	Params  map[string]string
 
+	// For writing the response
 	StatusCode int
 
+	// For monitoring middlewares
 	middlewares []HandlerFunc
 	index       int
+
+	// For rendering templates
+	engine *Engine
 }
 
+// newContext returns a instance of Context
 func newContext(rw http.ResponseWriter, req *http.Request) *Context {
 	return &Context{
 		RespWriter: rw,
@@ -33,63 +42,78 @@ func newContext(rw http.ResponseWriter, req *http.Request) *Context {
 	}
 }
 
+// Query is for GET Method to retrieve data
 func (ctx *Context) Query(key string) string {
-	return ctx.Req.URL.Query().Get(key)
+	return ctx.Req.URL.Query().Get(key) // Get from request
 }
 
+// PostForm is for POST Method to retrieve data
 func (ctx *Context) PostForm(key string) string {
-	return ctx.Req.FormValue(key)
+	return ctx.Req.FormValue(key) // Get from request
 }
 
+// Param is for /: or /* to retrieve data
 func (ctx *Context) Param(key string) string {
-	return ctx.Params[key]
+	return ctx.Params[key] // Get from context
 }
 
+// SetStatus sets the response status code
 func (ctx *Context) SetStatus(code int) {
 	ctx.StatusCode = code
-	ctx.RespWriter.WriteHeader(ctx.StatusCode) // TODO: 请求行
+	ctx.RespWriter.WriteHeader(ctx.StatusCode)
 }
 
+// SetHeader sets the response header kvpair
 func (ctx *Context) SetHeader(key string, value string) {
-	ctx.RespWriter.Header().Set(key, value) // TODO: 请求头
+	ctx.RespWriter.Header().Set(key, value)
 }
 
+// String quickly contructs response of text/plain content type
 func (ctx *Context) String(code int, format string, values ...interface{}) {
 	ctx.SetStatus(code)
 	ctx.SetHeader("Content-Type", "text/plain")
-	ctx.RespWriter.Write([]byte(fmt.Sprintf(format, values...))) // TODO: 请求体
+	ctx.RespWriter.Write([]byte(fmt.Sprintf(format, values...)))
 }
 
+// Data quickly contructs response of octet-stream content type
 func (ctx *Context) Data(code int, data []byte) {
 	ctx.SetStatus(code)
-	ctx.RespWriter.Write(data) // TODO: 请求体
+	ctx.SetHeader("Content-Type", "application/octet-stream")
+	ctx.RespWriter.Write(data)
 }
 
+// JSON quickly contructs response of application/json content type
 func (ctx *Context) JSON(code int, obj interface{}) {
 	ctx.SetStatus(code)
 	ctx.SetHeader("Content-Type", "application/json")
-	bytes, _ := json.Marshal(obj)
-	ctx.RespWriter.Write(bytes) // TODO: 请求体
+	bytes, _ := json.Marshal(obj) // Serialize the content
+	ctx.RespWriter.Write(bytes)
 }
 
-func (ctx *Context) HTML(code int, html string) {
+// HTML quickly contructs response of text/html content type
+func (ctx *Context) HTML(code int, filename string, data interface{}) {
 	ctx.SetStatus(code)
 	ctx.SetHeader("Content-Type", "text/html")
-	ctx.RespWriter.Write([]byte(html)) // TODO: 请求体
+	ctx.engine.templates.ExecuteTemplate(ctx.RespWriter, filename, data)
 }
 
-func (ctx *Context) Fail(code int, err string) {
-	ctx.index = len(ctx.middlewares) // TODO: 置为末位表示出错
+// Fail quickly contructs response of errors
+func (ctx *Context) Fail(code int, desc string) {
+	// Once failed, stop excuting the rest middlewares
+	ctx.index = len(ctx.middlewares)
+
+	// Support custom status code and error message
 	ctx.JSON(code, H{
-		"msg": err,
+		"msg": desc,
 	})
 }
 
+// Next controls middleware excution order
 func (ctx *Context) Next() {
-	// TODO: 正序处理
-	ctx.index++
+	ctx.index++ // Mark current middleware
 
-	for ; ctx.index < len(ctx.middlewares); ctx.index++ {
-		ctx.middlewares[ctx.index](ctx)
+	for ctx.index < len(ctx.middlewares) {
+		ctx.middlewares[ctx.index](ctx) // Call next middleware
+		ctx.index++                     // To exit the loop
 	}
 }

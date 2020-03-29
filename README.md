@@ -110,9 +110,7 @@ api.Use(Logger(), Recovery())
 
 ## TODOs
 
-- [ ] Comments
-- [ ] Blogs
 - [ ] Helpers for PUT and DELETE
 - [ ] Regular Expression Support
-- [ ] Unit Tests
 - [ ] Pratical Middlewares
+- [ ] Unit and Benchmark Tests

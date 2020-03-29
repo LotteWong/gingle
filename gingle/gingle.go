@@ -6,58 +6,73 @@ import (
 	"strings"
 )
 
-// TODO: Handler 分离路由部件
+// Engine is the core of gingle
 type Engine struct {
+	// For group control
 	*RouterGroup
-	groups    []*RouterGroup
-	router    *router
+	groups []*RouterGroup
+	// For router mapping
+	router *router
+	// For template render
 	templates *template.Template
 	funcMap   template.FuncMap
 }
 
+// New returns a instance of Engine with no middlewares
 func New() *Engine {
-	// TODO: 你中有我我中有你
 	engine := &Engine{
 		router: newRouter(),
 	}
-	engine.RouterGroup = &RouterGroup{
-		engine: engine,
-	}
+
+	// engine is the top group of gingle
+	engine.RouterGroup = &RouterGroup{engine: engine}
 	engine.groups = []*RouterGroup{engine.RouterGroup}
+
 	return engine
 }
 
+// Default returns a instance of Engine with common middlewares
 func Default() *Engine {
-	// TODO: 默认会加载中间件
 	engine := New()
+
+	// Apply Logger and Recovery to engine
 	engine.Use(Logger(), Recovery())
+
 	return engine
 }
 
-// TODO: ListenAndServe 监听
+// Run encapsulates ListenAndServe by using engine as handler
 func (engine *Engine) Run(addr string) error {
 	return http.ListenAndServe(addr, engine)
 }
 
-// TODO: ServeHTTP 服务
+// ServeHTTP defines how gingle handle requests and responses
 func (engine *Engine) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	middlewares := make([]HandlerFunc, 0)
 	for _, group := range engine.groups {
+		// If belongs to some group, retrieve its middlewares
 		if strings.HasPrefix(req.URL.Path, group.prefix) {
 			middlewares = append(middlewares, group.middlewares...)
 		}
 	}
 
-	ctx := newContext(rw, req) // TODO: 关键转换
+	// Contruct the context
+	// recording response writer, request and middlewares
+	ctx := newContext(rw, req)
 	ctx.middlewares = middlewares
+	ctx.engine = engine
 
-	engine.router.handle(ctx) // TODO: 关键转换
+	// Parse the context
+	// and handle in static or dynamic mode
+	engine.router.handle(ctx)
 }
 
+// SetFuncMap sets render function
 func (engine *Engine) SetFuncMap(funcMap template.FuncMap) {
 	engine.funcMap = funcMap
 }
 
+// LoadHTMLGlob excutes template render
 func (engine *Engine) LoadHTMLGlob(pattern string) {
 	engine.templates = template.Must(template.New("").Funcs(engine.funcMap).ParseGlob(pattern))
 }

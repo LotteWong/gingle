@@ -2,12 +2,12 @@ module gingle-web
 
 go 1.13
 
+// Try to use go build instead of go run
 require (
 	gingle v0.0.0
 	honnef.co/go/tools v0.0.1-2020.1.3 // indirect
 )
 
+// From go 1.11 version, import packages with relative path
+// by using replace `ailas` => `path`
 replace gingle => ./gingle
-
-// 从 go 1.11 版本开始，引用相对路径的 package 需要使用上述方式
-// 使用 go build main.go，不用 go run main.go

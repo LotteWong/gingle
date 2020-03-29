@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Logger simply logs status and time of each connect
 func Logger() HandlerFunc {
 	return func(ctx *Context) {
 		t := time.Now()

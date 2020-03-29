@@ -10,10 +10,6 @@ func main() {
 
 	router.Static("/assets", "./static")
 
-	router.GET("/testHTML", func(ctx *gingle.Context) {
-		ctx.HTML(http.StatusOK, "<h1>Hello Gingle!</h1>")
-	})
-
 	testString := router.Group("/testString")
 	{
 		testString.GET("/", func(ctx *gingle.Context) {
